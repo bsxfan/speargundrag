@@ -1,25 +1,75 @@
+"""
+This is a simple model for how a speargun spear decelerates through the 
+water after leaving the gun at time t=0, when the initial ('muzzle') 
+velocity is v0. The model parameters are just v0 and k, a deceleration
+coefficient that is dependent on the spear dimensions and mass.
+
+The only assumption we make is that drag is proportional to speed. This
+gives a differential equation, which when solved shows that the speed 
+decays exponentially as a function of time and linearly as a function of
+distance.
+
+The model is equipped with the ability to estimate its parameters (v0, k)
+from given, noisy measurement data.
+
+By running this module as a script, you can generate an example plot that
+compares naive and model-based speed estimates.
+"""
 import numpy as np
+from numpy import ndarray
 from scipy.optimize import minimize
 
 
 class Model:
-    def __init__(self, v0, k):
+    def __init__(self, v0:float, k:float):
+        """
+        model parameters:
+            
+            v0: initial speed at time t=0 [m/s]
+        
+            k: drag coefficient (always positive) [1/s]
+        
+        Both parameters can be estimated using Model.fit() 
+        """
         self.v0 = v0
         self.k = k
         self.x_max = v0/k
         
-    def x_of_t(self, t):
+    def x_of_t(self, t: float | ndarray):
+        """
+        Computes distance travelled [m] at time t.
+        """
         return -self.x_max*np.expm1(-self.k*t)
     
-    def v_of_t(self, t):
+    def v_of_t(self, t: float | ndarray):
+        """
+        Computes speed [m/s] at time t.
+        """
         return self.v0*np.exp(-self.k*t)
 
-    def v_of_x(self, x):
+    def v_of_x(self, x: float | ndarray):
+        """
+        Computes speed [m/s] at distance x < x_max. 
+        
+        (At infinite time, we get x = x_max = v0/k.)
+        """
         assert (x < self.x_max).all(), f'We need x < x_max = {self.x_max}'
         return self.v0 - self.k*x
 
     @classmethod
-    def fit(cls, x, t):
+    def fit(cls, x:ndarray, t:ndarray) -> 'Model':
+        """
+        Provide measuremsnts that includes distance travelled and time elapsed.
+        
+        If you estimate from video, choose a video frame where the spear has 
+        already left the gun. Define the time and spear position of this frame
+        as t=0 and x=0. The measurements provided here are relative to that
+        origin. 
+        
+        The estimated model parameter v0 is the initial velocity at x=0
+        and t=0.
+        
+        """
         def obj(params):
             model = Model(*np.exp(params))
             return ((x-model.x_of_t(t))**2).mean()
