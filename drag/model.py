@@ -53,26 +53,39 @@ if __name__ == "__main__":
     
     nsamples = 10
     tss = np.linspace(0, tmax, nsamples)
-    noise = np.random.randn(nsamples)/20
-    xn = model0.x_of_t(tss) + noise
     
-    model1 = Model.fit(xn, tss)
-    v1 = model1.v_of_t(t)
+    plt.figure()
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     
-    delta_t = tss[1:] - tss[:-1]
-    delta_x = xn[1:] - xn[:-1]
-    vn = delta_x/delta_t
-    tn = (tss[1:] + tss[:-1])/2
-    
-    
+    noise_rms = 1/20
+    for i in range(1,100):
+        noise = np.random.randn(nsamples) * noise_rms
+        xn = model0.x_of_t(tss) + noise
+        
+        model1 = Model.fit(xn, tss)
+        v1 = model1.v_of_t(t)
+        
+        delta_t = tss[1:] - tss[:-1]
+        delta_x = xn[1:] - xn[:-1]
+        vn = delta_x/delta_t
+        tn = (tss[1:] + tss[:-1])/2
+        
+        
+        plt.plot(t, v1, '.', color=colors[1])
+        plt.plot(tn, vn, '.g')
+        plt.plot(tss, xn, '.r')
+
+
+    plt.plot(t, v1, '.', color=colors[1], label='model speed estimate [m/s]')
+    plt.plot(tn, vn, '.g', label='naive speed estimate [m/s]')
+    plt.plot(tss, xn, '.r', label='measured distance [m]')
+
     plt.plot(t, v, 'k', label='actual speed [m/s]')
-    plt.plot(t, x, label='actual distance [m]')
-    plt.plot(t, v1, '--', label='model speed estimate [m/s]')
-    plt.plot(tn, vn, '.', label='naive speed estimate [m/s]')
-    plt.plot(tss, xn, '.', label='measured distance [m]')
+    plt.plot(t, x, 'b', label='actual distance [m]')
     plt.legend()
     plt.grid()
     plt.xlabel('time [s]')
+    plt.title(f'distance measurement noise rms: {noise_rms*100} cm')
     plt.show()
     
     
