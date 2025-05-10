@@ -85,7 +85,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
     plt.xlabel('time [s]')
-    plt.title(f'distance measurement noise rms: {noise_rms*100} cm')
+    plt.title(f'distance measurement error rms: {noise_rms*100} cm')
     plt.show()
     
     
