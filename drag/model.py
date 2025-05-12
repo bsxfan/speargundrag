@@ -101,6 +101,8 @@ class Spear:
     def launch(self, v0) -> Model:    
         return Model(v0, self.k)
         
+    def launch_at(self, v0, target:'Target') -> Model:    
+        return Shot(v0, self, target)
         
     @classmethod
     def drag_coefficient_given_k(cls, k:float=3.3, spear:'Spear'=None) -> float:
@@ -111,7 +113,7 @@ class Spear:
         return k*spear.mass / spear.area
         
 class Target:
-    def __init__(self, penetration_pressure:float = 7e6):
+    def __init__(self, penetration_pressure:float = 6e6):
         self.penetration_pressure = penetration_pressure
         
     def penetration_depth(self, speed, spear:Spear = Spear()) -> float:
@@ -138,6 +140,13 @@ class Target:
         return pressure
         
         
+class Shot:
+    def __init__(self, v0: float, spear:Spear=Spear(), target=Target()):
+        self.v0 = v0
+        self.spear = spear
+        self.target = target
+        self.model = spear.launch(v0)
+
         
         
         
