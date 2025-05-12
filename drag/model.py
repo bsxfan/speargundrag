@@ -79,6 +79,32 @@ class Model:
         print('model fit RMS error:', res.fun)
         v0, k = np.exp(res.x)
         return cls(v0, k)
+    
+    
+    
+class Spear:
+    def __init__(self, drag_coefficient:float = None, 
+                       density:float = 7.75, 
+                       diameter:float =7e-3, 
+                       length:float = 1.7):
+        self.drag_coefficient = drag_coefficient
+        self.density = density
+        self.diameter = diameter
+        self.length = length
+        self.volume = vol = np.pi * diameter**2 * length
+        self.mass = density * 1_000 * vol
+        self.area = 2 * np.pi * diameter * length
+        
+    @classmethod
+    def drag_coefficient_given_k(cls, k:float=3.3, spear:'Spear'=None) -> float:
+        """
+        k = c * area / mass
+        """
+        if spear is None: spear = Spear()
+        return k*spear.mass / spear.area
+        
+        
+        
         
     
 if __name__ == "__main__":
