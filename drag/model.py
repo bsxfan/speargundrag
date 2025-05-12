@@ -83,7 +83,7 @@ class Model:
     
     
 class Spear:
-    def __init__(self, drag_coefficient:float = None, 
+    def __init__(self, drag_coefficient:float = 89.5, 
                        density:float = 7.75, 
                        diameter:float =7e-3, 
                        length:float = 1.7):
@@ -91,9 +91,16 @@ class Spear:
         self.density = density
         self.diameter = diameter
         self.length = length
-        self.volume = vol = np.pi * diameter**2 * length
-        self.mass = density * 1_000 * vol
-        self.area = 2 * np.pi * diameter * length
+        self.x_area = x_area = np.pi * diameter**2
+        self.volume = vol =  x_area * length
+        self.mass = mass = density * 1_000 * vol
+        self.area = area = 2 * np.pi * diameter * length # exclude x_area
+        self.k = drag_coefficient * area / mass
+        
+        
+    def launch(self, v0) -> Model:    
+        return Model(v0, self.k)
+        
         
     @classmethod
     def drag_coefficient_given_k(cls, k:float=3.3, spear:'Spear'=None) -> float:
@@ -102,6 +109,35 @@ class Spear:
         """
         if spear is None: spear = Spear()
         return k*spear.mass / spear.area
+        
+class Target:
+    def __init__(self, penetration_pressure:float = 7e6):
+        self.penetration_pressure = penetration_pressure
+        
+    def penetration_depth(self, speed, spear:Spear = Spear()) -> float:
+        energy = 0.5 * spear.mass * speed **2
+        force = spear.x_area * self.penetration_pressure
+        depth = energy / force
+        return depth
+    
+    def min_required_speed(self, spear:Spear = Spear(), 
+                                 penetration_depth: float = 0.1) -> float:
+        force = spear.x_area * self.penetration_pressure
+        energy = force * penetration_depth
+        speed = np.sqrt(2*energy/spear.mass)
+        return speed
+    
+    
+    @classmethod
+    def penetration_pressure_estimate(cls, speed:float = 10.0, 
+                                           penetration_depth:float = 0.1, 
+                                           spear:Spear = Spear()) -> float:
+        energy = 0.5 * spear.mass * speed **2
+        force = energy / penetration_depth
+        pressure = force / spear.x_area
+        return pressure
+        
+        
         
         
         
